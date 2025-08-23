@@ -7,6 +7,21 @@ from tqdm import tqdm
 import time
 warnings.filterwarnings('ignore')
 
+# ----------------------------
+# Logging
+# ----------------------------
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler("debug.log", encoding="utf-8"),  # 파일: 무제한
+        logging.StreamHandler()                              # 노트북 셀: 요약만
+    ]
+)
+# ----------------------------
+
 class ClusterBasedForecastingModel:
     """클러스터 기반 예측 모델 - 실제 활용 버전"""
     
@@ -15,14 +30,47 @@ class ClusterBasedForecastingModel:
         self.cluster_models = {}
         self.cluster_features = {}
         self.store_patterns = {}
+    
+    def classify_menu_stability(self, train_df):
+        """메뉴별 안정성 분류"""
         
+        menu_stability = {}
+        
+        for (store, menu), group in train_df.groupby(['store', 'menu']):
+            if len(group) < 30:  # 데이터 부족시 제외
+                continue
+                
+            zero_ratio = (group['sales'] == 0).mean()
+            total_sales = group['sales'].sum()
+            
+            # 안정성 분류 기준
+            if zero_ratio < 0.1:
+                stability = 'very_stable'
+            elif zero_ratio < 0.3:
+                stability = 'stable'  
+            elif zero_ratio < 0.6:
+                stability = 'moderate'
+            else:
+                stability = 'unstable'
+                
+            menu_stability[(store, menu)] = {
+                'stability': stability,
+                'zero_ratio': zero_ratio,
+                'total_sales': total_sales,
+                'avg_sales': group['sales'].mean(),
+                'volatility': group['sales'].std() / (group['sales'].mean() + 1e-8)
+            }
+        
+        self.menu_stability_map = menu_stability
+        return menu_stability
+    
     def analyze_and_cluster_menus(self, train_df):
         """메뉴 클러스터링 및 클러스터별 특성 분석"""
         
         menu_features = []
         menu_names = []
         
-        print("메뉴 클러스터링 시작...")
+        logging.debug("메뉴 클러스터링 시작...")
         
         # 1. 각 메뉴별 특성 추출
         grouped = train_df.groupby(['store', 'menu'])
@@ -56,7 +104,7 @@ class ClusterBasedForecastingModel:
             menu_names.append((store, menu))
         
         if len(menu_features) < 5:
-            print("클러스터링에 충분한 메뉴가 없음")
+            logging.debug("클러스터링에 충분한 메뉴가 없음")
             return {}
         
         # 2. K-means 클러스터링
@@ -68,7 +116,7 @@ class ClusterBasedForecastingModel:
         
         # 최적 클러스터 수 결정
         n_clusters = min(6, max(3, len(menu_features) // 8))
-        print(f"클러스터 수: {n_clusters}")
+        logging.debug(f"클러스터 수: {n_clusters}")
         
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         cluster_labels = kmeans.fit_predict(features_scaled)
@@ -106,7 +154,7 @@ class ClusterBasedForecastingModel:
         
         # 클러스터 정보 출력
         for cluster_id, info in cluster_characteristics.items():
-            print(f"클러스터 {cluster_id}: {info['menu_count']}개 메뉴, "
+            logging.debug(f"클러스터 {cluster_id}: {info['menu_count']}개 메뉴, "
                   f"평균매출 {info['avg_sales']:.1f}, 타입: {info['dominant_type']}")
         
         return cluster_groups
@@ -281,7 +329,7 @@ class ClusterBasedForecastingModel:
     
     def fit(self, train_df):
         """클러스터 기반 모델 학습"""
-        print("클러스터 기반 모델 학습 시작...")
+        logging.debug("클러스터 기반 모델 학습 시작...")
         
         # 1. 메뉴 클러스터링
         self.analyze_and_cluster_menus(train_df)
@@ -290,10 +338,10 @@ class ClusterBasedForecastingModel:
         X, y, metadata = self.create_cluster_features(train_df, mode='train')
         
         if len(X) == 0:
-            print("학습 데이터 부족")
+            logging.debug("학습 데이터 부족")
             return
         
-        print(f"클러스터 피처: {X.shape}, 타겟: {y.shape}")
+        logging.debug(f"클러스터 피처: {X.shape}, 타겟: {y.shape}")
         
         # 3. 전체 모델 학습
         from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -322,7 +370,7 @@ class ClusterBasedForecastingModel:
                 pbar.update(100)
             
             # 클러스터별 모델 학습 (가장 유용한 부분)
-            print("클러스터별 전용 모델 학습 중...")
+            logging.debug("클러스터별 전용 모델 학습 중...")
             self.cluster_models = {}
             
             # 학습할 클러스터들 필터링
@@ -350,12 +398,12 @@ class ClusterBasedForecastingModel:
                 tqdm.write(f"클러스터 {cluster_id} 완료: {cluster_info['dominant_type']}, "
                         f"{cluster_sales_mask.sum()}개 샘플")
         
-        print(f"전체 모델 + {len(self.cluster_models)}개 클러스터 모델 학습 완료")
+        logging.debug(f"전체 모델 + {len(self.cluster_models)}개 클러스터 모델 학습 완료")
     
     def predict(self, test_df):
         """클러스터 기반 예측"""
         if not hasattr(self, 'global_model'):
-            print("모델이 학습되지 않음")
+            logging.debug("모델이 학습되지 않음")
             return np.zeros((len(test_df), 7)), []
         
         X, _, metadata = self.create_cluster_features(test_df, mode='predict')
@@ -363,7 +411,7 @@ class ClusterBasedForecastingModel:
         if len(X) == 0:
             return np.zeros((0, 7)), []
         
-        print("매출 여부 예측 중...")
+        logging.debug("매출 여부 예측 중...")
         with tqdm(total=100, desc="분류 예측") as pbar:
             has_sales_prob = self.zero_classifier.predict_proba(X)[:, 1]
             pbar.update(100)
@@ -392,7 +440,7 @@ class ClusterBasedForecastingModel:
         predictions[zero_mask] = 0
         
         # 후처리
-        predictions = np.maximum(predictions, 1)
+        predictions = np.maximum(predictions, 0)
         # predictions = np.round(predictions, 2)
         
         return predictions, metadata
@@ -421,7 +469,7 @@ def run_cluster_based_pipeline():
     test_files = sorted(glob.glob('TEST_*.csv'))
     
     for test_idx, test_file in enumerate(test_files):
-        print(f"클러스터 기반 처리: {test_file}")
+        logging.debug(f"클러스터 기반 처리: {test_file}")
         
         test_df = pd.read_csv(test_file)
         test_df['date'] = pd.to_datetime(test_df['영업일자'])
@@ -448,7 +496,7 @@ def run_cluster_based_pipeline():
                         submission.loc[row_idx, col] = max(0.0, pred_value)
     
     submission.to_csv('cluster_based_submission.csv', index=False)
-    print("cluster_based_submission.csv 생성 완료!")
+    logging.debug("cluster_based_submission.csv 생성 완료!")
     
     return submission
 
