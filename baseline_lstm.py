@@ -32,7 +32,7 @@ def set_seed(seed=42):
 
 set_seed(42)
 
-LOOKBACK, PREDICT, BATCH_SIZE, EPOCHS = 28, 7, 32, 50
+LOOKBACK, PREDICT, BATCH_SIZE, EPOCHS = 28, 7, 64, 50
 DEVICE = torch.device("cpu")
 MONTH_SCALE = 12
 

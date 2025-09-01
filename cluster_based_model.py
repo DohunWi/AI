@@ -352,7 +352,7 @@ class ClusterBasedForecastingModel:
         # 매출 여부 분류기
         has_sales = (y > 0).any(axis=1)
         self.zero_classifier = RandomForestClassifier(
-            n_estimators=200, max_depth=12, random_state=42, class_weight='balanced'
+            n_estimators=200, max_depth=8, random_state=42, class_weight='balanced'
         )
         self.zero_classifier.fit(X, has_sales)
         
@@ -435,7 +435,7 @@ class ClusterBasedForecastingModel:
                 predictions[i] = self.global_model.predict(X[i:i+1])[0]
         
         # Zero-inflation 적용
-        threshold = 0.3
+        threshold = 0.45
         zero_mask = has_sales_prob < threshold
         predictions[zero_mask] = 0
         
