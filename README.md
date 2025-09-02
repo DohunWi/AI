@@ -16,7 +16,7 @@ Task : 곤지암 리조트 데이터 분석 및 식음업장 수요예측
 - 환경: VS Code + Jupyter Notebook, macOS(M2)
 
 ## Project Structure
-.
+```
 ├── __pycache__
 │   ├── baseline_lstm.cpython-310.pyc
 │   ├── clipping.cpython-310.pyc
@@ -46,6 +46,7 @@ Task : 곤지암 리조트 데이터 분석 및 식음업장 수요예측
     ├── cluster_based_model.py
     ├── ens_model.py
     └── ensemble_model.ipynb
+```
 
 ## Installation
 ```bash
