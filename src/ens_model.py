@@ -421,5 +421,5 @@ submission = ensemble.create_submission_file(predictions)
 submission.to_csv('ensemble_result.csv', index=False)
 """
 
-# if __name__ == "__main__":
-#     submission, predictions = run_ensemble_pipeline()
+if __name__ == "__main__":
+    submission, predictions = run_ensemble_pipeline()
