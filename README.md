@@ -16,21 +16,36 @@ Task : 곤지암 리조트 데이터 분석 및 식음업장 수요예측
 - 환경: VS Code + Jupyter Notebook, macOS(M2)
 
 ## Project Structure
-├── src/
-│ ├── baseline_lstm.py
-│ ├── cluster_based_model.py
-│ ├── ens_model.py
-│ └── ensemble_model.ipynb
-├── data/
-│ ├── train/train.csv
-│ └── test/TEST_00.csv ... TEST_09.csv
+.
+├── __pycache__
+│   ├── baseline_lstm.cpython-310.pyc
+│   ├── clipping.cpython-310.pyc
+│   ├── cluster_based_model.cpython-310.pyc
+│   ├── complete_advanced_model.cpython-310.pyc
+│   ├── ens_model.cpython-310.pyc
+│   ├── hotfix.cpython-310.pyc
+│   ├── launch_detector.cpython-310.pyc
+│   ├── menu_clipping.cpython-310.pyc
+│   ├── menu_detector.cpython-310.pyc
+│   └── weight_processor.cpython-310.pyc
+├── data
+│   ├── test
+│   └── train
+├── debug.log
+├── EP/
 ├── helper/
-│ ├── comparison.ipynb
-│ └── Visualization.ipynb
-├── outputs/
-│ ├── predictions/
-│ └── ens/
-└── README.md
+├── LG AI certification.pdf
+├── models/
+├── outputs
+│   └── Submission
+├── README.md
+└── src
+    ├── baseline_cluster.ipynb
+    ├── baseline_lstm.py
+    ├── Baseline.ipynb
+    ├── cluster_based_model.py
+    ├── ens_model.py
+    └── ensemble_model.ipynb
 
 ## Installation
 ```bash
