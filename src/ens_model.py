@@ -24,18 +24,18 @@ import sys
 sys.path.append('./')
 
 # 기존 LSTM 모델 함수들 import
-from baseline_lstm import (
+from Ensemble_model.baseline_lstm import (
     train_lstm, predict_lstm, generate_combined_holiday_list, 
     solar_md_holidays, lunar_solar_dates
 )
 # mene clipping import
 
 # 클러스터링 모델 import  
-from cluster_based_model import ClusterBasedForecastingModel
+from Ensemble_model.cluster_based_model import ClusterBasedForecastingModel
 
 class EnsemblePredictor:
     """LSTM + 클러스터링 모델 앙상블"""
-    from cluster_based_model import ClusterBasedForecastingModel
+    from Ensemble_model.cluster_based_model import ClusterBasedForecastingModel
     def __init__(self, high_weight_venues=['담하', '미라시아']):
         self.high_weight_venues = high_weight_venues
         self.lstm_models = None
@@ -374,7 +374,7 @@ def run_ensemble_pipeline():
     ensemble.load_and_train_models('./train/train.csv')
     
     # 3. 최적 가중치 찾기 (선택사항)
-    ensemble.find_optimal_weights_on_validation()
+    # ensemble.find_optimal_weights_on_validation()
     
     # 4. 테스트 예측
     test_files = sorted(glob.glob('./TEST_*.csv'))
@@ -405,9 +405,8 @@ def run_ensemble_pipeline():
 
 # ===== 실행 방법 =====
 """
-1. 이 코드를 ensemble_model.py로 저장
-2. 기존 모델 코드들이 같은 디렉토리에 있는지 확인
-3. 다음 명령 실행:
+1. 기존 모델 코드들이 같은 디렉토리에 있는지 확인
+2. 다음 명령 실행:
 
 from ensemble_model import run_ensemble_pipeline
 submission, predictions = run_ensemble_pipeline()
